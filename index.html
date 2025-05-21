@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprawdzanie biletów QR</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2em; text-align: center; }
+    #result { margin-top: 1em; font-size: 1.5em; }
+    .used { color: red; }
+    .valid { color: green; }
+    button { margin-top: 2em; padding: 10px 20px; font-size: 1em; }
+    #counter { margin-top: 1em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Sprawdzanie biletów QR</h1>
+  <div id="reader" style="width:300px;margin:auto"></div>
+  <div id="result"></div>
+  <div id="counter">Użyto biletów: 0 / 200</div>
+  <button onclick="resetTickets()">Resetuj listę użytych biletów</button>
+
+  <script>
+    const validTickets = new Set();
+    let usedTickets = new Set();
+
+    // Generowanie listy biletów BILET-001 do BILET-200
+    for (let i = 1; i <= 200; i++) {
+      const num = i.toString().padStart(3, '0');
+      validTickets.add(`BILET-${num}`);
+    }
+
+    function showResult(text, status) {
+      const result = document.getElementById("result");
+      result.className = status;
+      result.textContent = text;
+      updateCounter();
+    }
+
+    function updateCounter() {
+      document.getElementById("counter").textContent = `Użyto biletów: ${usedTickets.size} / 200`;
+    }
+
+    function onScanSuccess(decodedText) {
+      if (!validTickets.has(decodedText)) {
+        showResult("Nieznany bilet: " + decodedText, "used");
+        return;
+      }
+
+      if (usedTickets.has(decodedText)) {
+        showResult("Bilet " + decodedText + " JUŻ UŻYTY", "used");
+      } else {
+        usedTickets.add(decodedText);
+        showResult("Bilet " + decodedText + " WAŻNY", "valid");
+      }
+    }
+
+    function resetTickets() {
+      usedTickets = new Set();
+      showResult("Lista użytych biletów zresetowana", "");
+      updateCounter();
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+      fps: 10,
+      qrbox: 250
+    });
+
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
