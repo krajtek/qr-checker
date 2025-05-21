@@ -25,8 +25,8 @@
   <script>
     const validTickets = new Set();
     let usedTickets = new Set();
+    let scanningPaused = false;
 
-    // Generowanie listy biletów BILET-001 do BILET-200
     for (let i = 1; i <= 200; i++) {
       const num = i.toString().padStart(3, '0');
       validTickets.add(`BILET-${num}`);
@@ -37,6 +37,12 @@
       result.className = status;
       result.textContent = text;
       updateCounter();
+
+      // Czyść wynik po 5 sekundach
+      setTimeout(() => {
+        result.textContent = "";
+        result.className = "";
+      }, 5000);
     }
 
     function updateCounter() {
@@ -44,17 +50,22 @@
     }
 
     function onScanSuccess(decodedText) {
+      if (scanningPaused) return;
+      scanningPaused = true;
+
       if (!validTickets.has(decodedText)) {
         showResult("Nieznany bilet: " + decodedText, "used");
-        return;
-      }
-
-      if (usedTickets.has(decodedText)) {
+      } else if (usedTickets.has(decodedText)) {
         showResult("Bilet " + decodedText + " JUŻ UŻYTY", "used");
       } else {
         usedTickets.add(decodedText);
         showResult("Bilet " + decodedText + " WAŻNY", "valid");
       }
+
+      // Wznów skanowanie po 2 sekundach
+      setTimeout(() => {
+        scanningPaused = false;
+      }, 2000);
     }
 
     function resetTickets() {
